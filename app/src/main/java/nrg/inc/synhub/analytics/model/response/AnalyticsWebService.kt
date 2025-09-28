@@ -22,4 +22,8 @@ interface AnalyticsWebService {
 
     @GET("metrics/task/member/{memberId}/time-passed")
     suspend fun getTaskTimePassed(@Path("memberId") memberId: Long): Response<TaskTimePassedResponse>
+
+    @GET("metrics/member/{memberId}/tasks/avg-completion-time")
+    suspend fun getAvgCompletionTimeForMember(@Path("memberId") memberId: Long): Response<AnalyticsResponse>
 }
+

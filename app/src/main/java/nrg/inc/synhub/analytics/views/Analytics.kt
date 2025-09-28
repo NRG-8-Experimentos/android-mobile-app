@@ -476,26 +476,27 @@ fun AnalyticsCompletionTimeSection(
     members: List<com.example.synhub.groups.application.dto.MemberResponse> = emptyList()
 ) {
     val avg = analyticsState.avgCompletionTime
-    val avgDays = avg?.details?.get("COMPLETED") as? Double
+    val avgDays = avg?.value
     val formatted = formatDaysToDuration(avgDays)
 
     val analyticsApi = RetrofitClient.analyticsWebService as AnalyticsWebService
     val coroutineScope = rememberCoroutineScope()
-    var memberTimes by remember { mutableStateOf<Map<Long, Long?>>(emptyMap()) }
+    var memberAvgTimes by remember { mutableStateOf<Map<Long, Double?>>(emptyMap()) }
     var loading by remember { mutableStateOf(true) }
 
     LaunchedEffect(members) {
         loading = true
-        val times = mutableMapOf<Long, Long?>()
+        val times = mutableMapOf<Long, Double?>()
         members.forEach { member ->
             coroutineScope.launch {
                 try {
-                    val resp = analyticsApi.getTaskTimePassed(member.id)
-                    times[member.id] = resp.body()?.timePassed
+                    // Cambia la llamada al endpoint correcto para obtener el promedio por miembro
+                    val resp = analyticsApi.getAvgCompletionTimeForMember(member.id)
+                    times[member.id] = resp.body()?.value
                 } catch (_: Exception) {
                     times[member.id] = null
                 }
-                memberTimes = times.toMap()
+                memberAvgTimes = times.toMap()
             }
         }
         loading = false
@@ -530,7 +531,7 @@ fun AnalyticsCompletionTimeSection(
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     members.forEach { member ->
                         val name = "${member.name} ${member.surname}"
-                        val time = memberTimes[member.id]
+                        val avgDaysMember = memberAvgTimes[member.id]
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             verticalAlignment = Alignment.CenterVertically
@@ -552,7 +553,7 @@ fun AnalyticsCompletionTimeSection(
                                 modifier = Modifier.weight(1f)
                             )
                             Text(
-                                text = formatDuration(time),
+                                text = formatDaysToDuration(avgDaysMember),
                                 fontWeight = FontWeight.Medium,
                                 color = AccentBlue,
                                 fontSize = 15.sp
