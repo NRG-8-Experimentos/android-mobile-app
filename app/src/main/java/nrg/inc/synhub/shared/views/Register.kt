@@ -64,6 +64,19 @@ fun RegisterScreen(modifier: Modifier, nav: NavHostController){
     var txtPass1 by remember { mutableStateOf("") }
     var txtPass2 by remember { mutableStateOf("") }
 
+    // Estados para errores de validación
+    var emailError by remember { mutableStateOf<String?>(null) }
+    var urlError by remember { mutableStateOf<String?>(null) }
+    var passwordError by remember { mutableStateOf<String?>(null) }
+
+    // Funciones de validación
+    fun isValidEmail(email: String): Boolean {
+        return android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()
+    }
+    fun isValidUrl(url: String): Boolean {
+        return android.util.Patterns.WEB_URL.matcher(url).matches()
+    }
+
     val registerViewModel : RegisterViewModel = viewModel()
     val logInViewModel: LogInViewModel = viewModel()
     val signUpResult by registerViewModel.signUpResult.collectAsState()
@@ -181,7 +194,16 @@ fun RegisterScreen(modifier: Modifier, nav: NavHostController){
                 unfocusedContainerColor = Color.White,
                 cursorColor = Color.Cyan
             ),
-            onValueChange = { txtMail = it }
+            onValueChange = {
+                txtMail = it
+                emailError = null
+            },
+            isError = emailError != null,
+            supportingText = {
+                if (emailError != null) {
+                    Text(emailError ?: "", color = Color.Red, fontSize = 12.sp)
+                }
+            }
         )
         OutlinedTextField(
             value = txtUrlPfp,
@@ -204,7 +226,16 @@ fun RegisterScreen(modifier: Modifier, nav: NavHostController){
                 unfocusedContainerColor = Color.White,
                 cursorColor = Color.Cyan
             ),
-            onValueChange = { txtUrlPfp = it }
+            onValueChange = {
+                txtUrlPfp = it
+                urlError = null
+            },
+            isError = urlError != null,
+            supportingText = {
+                if (urlError != null) {
+                    Text(urlError ?: "", color = Color.Red, fontSize = 12.sp)
+                }
+            }
         )
         OutlinedTextField(
             value = txtPass1,
@@ -228,7 +259,7 @@ fun RegisterScreen(modifier: Modifier, nav: NavHostController){
                 unfocusedContainerColor = Color.White,
                 cursorColor = Color.Cyan
             ),
-            onValueChange = { txtPass1 = it }
+            onValueChange = { txtPass1 = it; passwordError = null }
         )
         OutlinedTextField(
             value = txtPass2,
@@ -252,17 +283,37 @@ fun RegisterScreen(modifier: Modifier, nav: NavHostController){
                 unfocusedContainerColor = Color.White,
                 cursorColor = Color.Cyan
             ),
-            onValueChange = { txtPass2 = it }
+            onValueChange = { txtPass2 = it; passwordError = null },
+            isError = passwordError != null,
+            supportingText = {
+                if (passwordError != null) {
+                    Text(passwordError ?: "", color = Color.Red, fontSize = 12.sp)
+                }
+            }
         )
 
         ElevatedButton(
             colors = ButtonDefaults.buttonColors(Color(0xFF4A90E2)),
             shape = RoundedCornerShape(10.dp),
             onClick = {
-                if(txtPass1 != txtPass2) {
-                    // Show error message for password mismatch
-                    Log.d("Register", "Passwords do not match")
-                }else{
+                var valid = true
+                emailError = null
+                urlError = null
+                passwordError = null
+
+                if (!isValidEmail(txtMail)) {
+                    emailError = "Correo electrónico no válido"
+                    valid = false
+                }
+                if (txtUrlPfp.isNotBlank() && !isValidUrl(txtUrlPfp)) {
+                    urlError = "URL no válida"
+                    valid = false
+                }
+                if (txtPass1 != txtPass2) {
+                    passwordError = "Las contraseñas no coinciden"
+                    valid = false
+                }
+                if (valid) {
                     Log.d("Register", "Attempting to sign up with user: $txtUser")
                     registerViewModel.signUp(
                         SignUpRequest(
