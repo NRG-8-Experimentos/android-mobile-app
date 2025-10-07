@@ -48,7 +48,8 @@ dependencies {
     implementation("org.mozilla:rhino:1.7R4")
     implementation("androidx.compose.runtime:runtime-livedata:1.7.8")
     implementation("io.coil-kt:coil-compose:2.4.0")
-
+    androidTestImplementation("androidx.compose.ui:ui-test-junit4:1.9.0")
+    debugImplementation("androidx.compose.ui:ui-test-manifest:1.9.0")
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
