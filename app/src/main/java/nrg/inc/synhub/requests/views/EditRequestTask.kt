@@ -36,6 +36,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -58,10 +59,13 @@ import com.example.synhub.shared.icons.keyboardSVG
 import com.example.synhub.shared.icons.logoutSVG
 import com.example.synhub.shared.icons.personSVG
 import com.example.synhub.shared.icons.saveSVG
+import com.example.synhub.shared.model.client.RetrofitClient
 import com.example.synhub.tasks.application.dto.EditTaskRequest
 import com.example.synhub.tasks.application.dto.TaskResponse
 import com.example.synhub.tasks.viewmodel.TaskViewModel
 import com.example.synhub.tasks.views.DatePickerModal
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
@@ -104,6 +108,7 @@ fun EditRequestTaskScreen(modifier: Modifier = Modifier, nav: NavHostController,
     val groupViewModel:GroupViewModel = viewModel()
     val taskViewModel:TaskViewModel = viewModel()
     val requestViewModel: RequestViewModel = viewModel()
+    val coroutineScope = rememberCoroutineScope()
 
     val members by groupViewModel.members.collectAsState()
 
@@ -294,27 +299,34 @@ fun EditRequestTaskScreen(modifier: Modifier = Modifier, nav: NavHostController,
                     shape = RoundedCornerShape(10.dp),
                     modifier = Modifier,
                     onClick = {
-
                         if (requestId != null) {
-                            taskViewModel.updateTask(
-                                task.id,
-                                EditTaskRequest(
-                                    txtTitle,
-                                    txtDescription,
-                                    dueDateUtc, // Usar la fecha en formato UTC para enviar
-                                    txtMemberId ?: 0L
+                            coroutineScope.launch {
+                                Log.d("EditRequestTask", "Calling deleteRequest")
+                                val updateTaskResponse = RetrofitClient.tasksWebService.updateTask(
+                                    task.id,
+                                    EditTaskRequest(
+                                        txtTitle,
+                                        txtDescription,
+                                        dueDateUtc,
+                                        txtMemberId ?: 0L
+                                    )
                                 )
-                            )
-                            taskViewModel.updateTaskStatus(task.id, "IN_PROGRESS")
-                            requestViewModel.deleteRequest(task.id, requestId.toLong())
-                            nav.navigate("GroupRequests") {
-                                popUpTo("Home") { inclusive = false }
-                                launchSingleTop = true
+                                if (updateTaskResponse.isSuccessful) {
+                                    val updateStatusResponse = RetrofitClient.tasksWebService.updateTaskStatus(task.id, "IN_PROGRESS")
+                                    if (updateStatusResponse.isSuccessful) {
+                                        val deleteRequestResponse = RetrofitClient.requestsWebService.deleteRequest(task.id, requestId.toLong())
+                                        if (deleteRequestResponse.isSuccessful) {
+                                            nav.navigate("GroupRequests") {
+                                                popUpTo("Home") { inclusive = false }
+                                                launchSingleTop = true
+                                            }
+                                        }
+                                    }
+                                }
                             }
                         } else {
                             Log.d("EditRequestTask", "RequestId is null, not calling deleteRequest")
                         }
-
 
                     }
                 ) {

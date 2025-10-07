@@ -8,7 +8,7 @@ import com.example.synhub.invitations.model.response.InvitationsWebService
 import com.example.synhub.shared.model.response.LogInWebService
 import com.example.synhub.shared.model.response.HomeWebService
 import com.example.synhub.shared.model.response.RegisterWebService
-import com.example.synhub.tasks.model.response.TasksWebService
+import nrg.inc.synhub.tasks.model.response.TasksWebService
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory

@@ -1,4 +1,4 @@
-package com.example.synhub.tasks.model.response
+package nrg.inc.synhub.tasks.model.response
 
 import com.example.synhub.tasks.application.dto.EditTaskRequest
 import com.example.synhub.tasks.application.dto.TaskRequest
